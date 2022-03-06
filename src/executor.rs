@@ -1,6 +1,5 @@
 use {
     // 引入之前实现的定时器模块
-    crate::timer_future::TimerFuture,
     futures::{
         future::{BoxFuture, FutureExt},
         task::{waker_ref, ArcWake},
@@ -9,8 +8,7 @@ use {
         future::Future,
         sync::mpsc::{sync_channel, Receiver, SyncSender},
         sync::{Arc, Mutex},
-        task::{Context, Poll},
-        time::Duration,
+        task::Context,
     },
 };
 
