@@ -3,6 +3,8 @@ use std::time::Duration;
 use timer_future::{executor::new_executor_and_spawner, timer_future::TimerFuture};
 
 fn main() {
+    // executor：执行器
+    // spawner：任务生成器
     let (executor, spawner) = new_executor_and_spawner();
 
     // 生成一个任务
@@ -16,7 +18,9 @@ fn main() {
     // drop掉任务，这样执行器就知道任务已经完成，不会再有新的任务进来
     drop(spawner);
 
+    println!("start");
     // 运行执行器直到任务队列为空
     // 任务运行后，会先打印`howdy!`, 暂停2秒，接着打印 `done!`
     executor.run();
+    println!("end");
 }

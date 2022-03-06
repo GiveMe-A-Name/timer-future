@@ -18,12 +18,15 @@ pub struct Executor {
 
 impl Executor {
     pub fn run(&self) {
+        // 不断从队列中取出 task
         while let Ok(task) = self.ready_queue.recv() {
+            // 拿出 task 中的 future
             let mut future_slot = task.future.lock().unwrap();
             if let Some(mut future) = future_slot.take() {
                 let waker = waker_ref(&task); // ?? waker_ref ?
                 let context = &mut Context::from_waker(&*waker); // 创建ctx
                 if future.as_mut().poll(context).is_pending() {
+                    // 如果他是 pending， 会把 future 放回 task 内部
                     *future_slot = Some(future);
                 }
             }
@@ -39,10 +42,12 @@ pub struct Spawner {
 impl Spawner {
     pub fn spawn(&self, future: impl Future<Output = ()> + 'static + Send) {
         let future = future.boxed();
+        // 将 future 包裹成 task
         let task = Arc::new(Task {
             future: Mutex::new(Some(future)),
             task_sender: self.task_sender.clone(),
         });
+        // 向队列发送task
         self.task_sender.send(task).expect("任务队列已满");
     }
 }
@@ -53,6 +58,7 @@ struct Task {
 }
 
 impl ArcWake for Task {
+    // 当 wake 的时候会重新把 task 放入队列中里
     fn wake_by_ref(arc_self: &Arc<Self>) {
         let cloned = arc_self.clone();
         arc_self.task_sender.send(cloned).expect("任务队列已满");
